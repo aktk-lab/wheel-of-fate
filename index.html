@@ -1,335 +1,239 @@
 <!doctype html>
-<html lang="ja">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
-<title>運命の環 — Advanced</title>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>🎡 運命の輪 — Fate Wheel v2</title>
 <style>
-:root{--bg:#0b1020;--panel:#0f162b;--ink:#e5e7eb;--mut:#9aa3b2;--hi:#7dd3fc;--ok:#22c55e;--ng:#ef4444}
-*{box-sizing:border-box}
-body{margin:0;background:radial-gradient(900px 600px at 10% -10%,rgba(125,211,252,.08),transparent 60%),linear-gradient(180deg,#0a1126,#0b1020);color:var(--ink);font:16px/1.55 system-ui,"Noto Sans JP",-apple-system,"Segoe UI",sans-serif;-webkit-tap-highlight-color:transparent}
-.wrap{max-width:900px;margin:0 auto;padding:12px}
-header{position:sticky;top:0;background:rgba(8,12,26,.82);backdrop-filter:blur(6px);border-bottom:1px solid #1b2a52;z-index:5}
-h1{margin:6px 0 8px;font-size:18px;color:#dbeafe}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.pill{border:1px solid #253266;border-radius:999px;padding:4px 10px;color:#cbd5e1;font-size:12px;white-space:nowrap}
-.btn{padding:10px 12px;border-radius:12px;border:1px solid #253266;background:#0f1838;color:#e5e7eb;cursor:pointer}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.card{background:rgba(7,14,26,.85);border:1px solid #1a2747;border-radius:14px;padding:12px;box-shadow:0 10px 26px rgba(0,0,0,.25)}
-.small{font-size:12px;color:#9aa3b2}
-.center{text-align:center}
-/* wheel */
-.wheel-area{display:flex;flex-direction:column;align-items:center;gap:8px}
-.wheel{width:260px;height:260px;border-radius:50%;border:6px solid #22305e;position:relative;overflow:hidden;box-shadow:0 10px 26px rgba(0,0,0,.35);transition:transform 1s cubic-bezier(.2,.9,.2,1)}
-.seg{position:absolute;left:50%;top:50%;width:50%;height:50%;transform-origin:0% 100%;background:#16224a;border-left:1px solid #253266;color:#e5e7eb;display:flex;align-items:center;justify-content:flex-end;padding:6px;font-size:12px}
-.pointer{width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:18px solid #e5e7eb;margin:8px auto}
-/* hand */
-.hand{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-.cx{min-width:140px;text-align:center;border:1px solid #2a3b77;border-radius:12px;background:#101a3a;padding:8px;position:relative;overflow:hidden}
-.cx .cost{position:absolute;right:6px;top:6px;font-size:12px;border:1px solid #2a3b77;border-radius:999px;padding:2px 6px;background:#0c1830}
-.cx.dis{opacity:.45}
-/* overlay */
-#overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:20}
-#overlay .box{background:#0b1020;border:1px solid #253266;border-radius:14px;padding:16px 14px;max-width:720px;box-shadow:0 18px 36px rgba(0,0,0,.4)}
-#overlay h2{margin:0 0 6px}
-.rowbtn{display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap}
-/* toast */
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:#101a3a;border:1px solid #2a3b77;color:#e5e7eb;padding:8px 12px;border-radius:10px;opacity:0;transition:opacity .2s, transform .35s;pointer-events:none}
+:root{ --size:320px; }
+*{box-sizing:border-box} body{margin:0;background:radial-gradient(800px 500px at 50% -10%,rgba(250,204,21,.12),transparent 60%),linear-gradient(180deg,#0b0f22,#151a35);color:#eaf2ff;font:16px/1.6 system-ui,"Noto Sans JP",sans-serif;text-align:center}
+h1{font-size:18px;margin:10px 6px;text-shadow:0 0 14px rgba(250,204,21,.35)}
+.header{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center;padding:8px}
+.pill{border:1px solid #2b3e7a;border-radius:999px;padding:4px 10px;background:#10183a;color:#dbeafe;font-size:12px}
+.btn{padding:9px 12px;border-radius:12px;border:1px solid #2b3e7a;background:#132761;color:#eef5ff;cursor:pointer}
+.btn:active{transform:translateY(1px)}
+.zoom{display:flex;gap:6px;align-items:center} input[type=range]{width:150px}
+.wrap{max-width:980px;margin:0 auto;padding:8px}
+.card{background:rgba(7,14,26,.85);border:1px solid #23346e;border-radius:14px;padding:12px;box-shadow:0 12px 36px rgba(0,0,0,.35);display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:800px){ .card{grid-template-columns:1fr} }
+canvas{width:var(--size);height:var(--size);background:#0a1536;border:1px solid #2b3e83;border-radius:50%;margin:auto}
+.pointer{position:relative;display:flex;justify-content:center;margin:6px 0}
+.pointer::after{content:"▲";font-size:22px}
+.actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.small{font-size:12px;color:#b8c8ea;max-height:160px;overflow:auto}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;background:#101a3a;border:1px solid #2a3b77;color:#e5e7eb;padding:8px 12px;border-radius:10px;opacity:0;transition:opacity .2s, transform .35s;z-index:10}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(-10px)}
 </style>
 </head>
 <body>
-<header>
+  <h1>🎡 運命の輪 — Fate Wheel v2（危険度・アーティファクト・保険）</h1>
+  <div class="header">
+    <span class="pill">🧙 あなた総得点:<b id="scoreP">0</b></span>
+    <span class="pill">🤖 AI総得点:<b id="scoreA">0</b></span>
+    <span class="pill">🎯 危険度:<b id="risk">0</b></span>
+    <span class="pill">🎁 アーティファクト:<b id="art">—</b></span>
+    <button id="new" class="btn">🔁 リセット</button>
+    <div class="zoom">
+      <button id="z-" class="btn">−</button>
+      <input id="z" type="range" min="260" max="420" value="320">
+      <button id="z+" class="btn">＋</button>
+    </div>
+  </div>
+
   <div class="wrap">
-    <h1>⭕ 運命の環 — Advanced（スピナー × 手札制御 × 妨害 × AI）</h1>
-    <div class="row">
-      <span class="pill">あなた 運命点:<b id="pMe">0</b></span>
-      <span class="pill">AI 運命点:<b id="pAI">0</b></span>
-      <span class="pill">フォーカス:<b id="focus">2</b>/6</span>
-      <span class="pill">手札:<b id="handN">0</b></span>
-      <button id="spin" class="btn">スピン！</button>
-      <button id="newMatch" class="btn">新しい対戦</button>
-      <button id="openDeck" class="btn">デッキ編集</button>
-      <button id="help" class="btn">遊び方</button>
-    </div>
+    <section class="card">
+      <div>
+        <div class="pointer"></div>
+        <canvas id="wheel" width="640" height="640"></canvas>
+        <div class="actions">
+          <button id="spin" class="btn">🎲 スピン</button>
+          <button id="bank" class="btn">💰 バンク</button>
+          <button id="ins"  class="btn">🛡 保険（ラウンド1回）</button>
+        </div>
+      </div>
+      <div>
+        <div class="pill" style="display:inline-block">今ラウンド: <b id="round">0</b></div>
+        <div class="pill" style="display:inline-block">AIラウンド: <b id="roundA">0</b></div>
+        <hr style="border:none;border-top:1px dashed #2a3b77;margin:8px 0">
+        <div id="log" class="small"></div>
+      </div>
+    </section>
   </div>
-</header>
-
-<main class="wrap">
-  <section class="card">
-    <div class="wheel-area">
-      <div class="pointer"></div>
-      <div id="wheel" class="wheel"></div>
-    </div>
-    <div class="center small" id="status">カードで角度や効果を操作 → 「スピン！」</div>
-    <div id="hand" class="hand"></div>
-    <hr style="border:none;border-top:1px dashed #2a3b77;margin:10px 0"/>
-    <div id="log" class="small"></div>
-  </section>
-</main>
-
-<div id="overlay">
-  <div class="box">
-    <h2 id="ovTitle">Deck</h2>
-    <div id="ovBody"></div>
-    <div class="rowbtn">
-      <button id="ovOK" class="btn">OK</button>
-      <button id="ovCancel" class="btn">閉じる</button>
-    </div>
-  </div>
-</div>
-<div id="toast" class="toast">text</div>
+  <div id="toast" class="toast">text</div>
 
 <script>
-// ===== Audio =====
-let AC, master;
-function initAudio(){ if(AC) return; AC=new (window.AudioContext||window.webkitAudioContext)(); master=AC.createGain(); master.gain.value=.22; master.connect(AC.destination); }
-function sfx(type='ui'){ if(!AC) return; const now=AC.currentTime, o=AC.createOscillator(), g=AC.createGain(); o.connect(g); g.connect(master);
-  o.type = type==='hit'?'square': type==='buff'?'triangle': 'sine';
-  const base = type==='hit'? 200 : type==='buff'? 880 : 520;
-  o.frequency.setValueAtTime(base, now);
-  if(type==='hit') o.frequency.exponentialRampToValueAtTime(140, now+.2);
-  if(type==='buff') o.frequency.exponentialRampToValueAtTime(1200, now+.25);
-  g.gain.setValueAtTime(.001, now); g.gain.exponentialRampToValueAtTime(.4, now+.02); g.gain.exponentialRampToValueAtTime(.001, now+.28);
-  o.start(); o.stop(now+.3);
-}
-document.body.addEventListener('pointerdown', initAudio, {once:true});
+/* ===== Util ===== */
+const tip=t=>{const el=document.getElementById('toast'); el.textContent=t; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),1000);}
+const log=m=>{const L=document.getElementById('log'); L.innerHTML+=m+'<br>'; L.scrollTop=L.scrollHeight;}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)); const rad=d=>d*Math.PI/180;
 
-// ===== Wheel / Game Data =====
-const segs=[
-  {name:'+6',val:6},{name:'+5',val:5},{name:'+4',val:4},{name:'-3',val:-3},{name:'x2次',val:0, tag:'x2'},
-  {name:'+3',val:3},{name:'奪取+4',val:0,tag:'steal4'},{name:'+2',val:2},{name:'-2',val:-2},{name:'+1',val:1},{name:'交換',val:0,tag:'swap'},{name:'無効',val:0}
+/* ===== Wheel data ===== */
+const SEG=[ // 値（スカルはnull）
+  3, 2, 4, 1, null, 3, -2, 5, 1, -3, 4, 2
 ];
-const ASEC = 360/segs.length;
-let angle=0; // CSS transform rotate
-let lockNarrow=0; // if >0, restrict randomness to +-N segments
+const COLORS=["#2dd4bf","#60a5fa","#f472b6","#fde047","#ef4444","#34d399","#93c5fd","#f59e0b","#a3e635","#ef4444","#22c55e","#60a5fa"];
+const SKULL_INDEX=SEG.findIndex(v=>v===null); // 4
+const BASE_DEG=360/SEG.length;
 
-let P = {pt:0, hand:[], focus:2, multNext:1, shield:false, respin:false};
-let A = {pt:0, hand:[], focus:2, multNext:1, shield:false, respin:false};
+/* ===== State ===== */
+let S;
+function reset(){
+  S={angle:0, spinning:false, risk:0, you:{score:0, round:0, art:pickArt(), usedIns:false},
+     ai:{score:0, round:0, art:pickArt(), usedIns:false}, turn:'you'};
+  updateHeader(); drawWheel(); document.getElementById('log').innerHTML='';
+  log(`▶️ 開始 あなたのアート: ${S.you.art.name} / AI: ${S.ai.art.name}`);
+}
+function pickArt(){
+  const ARTS=[
+    {id:'shield',name:'🛡シールド', effect:'最初のマイナス/スカルを無効'},
+    {id:'aim',   name:'🎯エイム',   effect:'スカル範囲を20%縮小'},
+    {id:'accel', name:'⚡アクセル', effect:'プラス結果に+1'}
+  ];
+  return ARTS[(Math.random()*ARTS.length)|0];
+}
 
-const handEl=document.getElementById('hand'), handN=document.getElementById('handN'), logEl=document.getElementById('log'), pMe=document.getElementById('pMe'), pAI=document.getElementById('pAI'), focusEl=document.getElementById('focus');
-const wheelEl=document.getElementById('wheel'), statusEl=document.getElementById('status'), spinBtn=document.getElementById('spin');
-
-document.getElementById('help').onclick=()=>showOverlay('遊び方', `<div class="small">
-<b>目的：</b>先に30点へ到達。<br>
-<b>流れ：</b>手札からコントロールカードを使い、<b>スピン</b>で出たセグメントの効果を得る。<br>
-<b>フォーカス：</b>カードの燃料。毎ターン+2、最大6。<br>
-<b>主要カード：</b>+15°/-15°/+30°/再スピン/指向(良い所へ)/x2付与/シールド(負数を0)/奪取2。<br>
-<b>セグメント：</b>数値は加点/減点、x2次(次回×2)、奪取+4、交換(最大3点差の交換)、無効。<br>
-</div>`);
-document.getElementById('newMatch').onclick=()=>startMatch();
-document.getElementById('openDeck').onclick=openDeck;
-document.getElementById('ovOK').onclick=()=>document.getElementById('overlay').style.display='none';
-document.getElementById('ovCancel').onclick=()=>document.getElementById('overlay').style.display='none';
-
-function showOverlay(title, inner){ const o=document.getElementById('overlay'); o.style.display='flex'; document.getElementById('ovTitle').textContent=title; document.getElementById('ovBody').innerHTML=inner; }
-function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 1200); }
-function log(m){ logEl.innerHTML+=m+'<br>'; logEl.scrollTop=logEl.scrollHeight; }
-
-// ===== Rendering =====
-function wheelRender(){
-  wheelEl.innerHTML='';
-  for(let i=0;i<segs.length;i++){
-    const e=document.createElement('div'); e.className='seg'; e.style.transform=`rotate(${i*ASEC}deg) skewY(${90-ASEC}deg)`; e.textContent=segs[i].name; wheelEl.appendChild(e);
+/* ===== Draw wheel ===== */
+function drawWheel(){
+  const cv=document.getElementById('wheel'), c=cv.getContext('2d'); const R=cv.width/2; c.clearRect(0,0,cv.width,cv.height);
+  c.save(); c.translate(R,R); c.rotate(rad(S.angle));
+  for(let i=0;i<SEG.length;i++){
+    const a0=rad(i*BASE_DEG), a1=rad((i+1)*BASE_DEG);
+    c.beginPath(); c.moveTo(0,0); c.arc(0,0,R,a0,a1); c.closePath(); c.fillStyle=COLORS[i%COLORS.length]; c.fill();
+    // label
+    c.save(); c.rotate(a0+(a1-a0)/2); c.translate(R*0.66,0); c.rotate(-rad(S.angle)); c.fillStyle="#0b0f22"; c.font="bold 32px system-ui";
+    const v=SEG[i]===null?"☠":(SEG[i]>0?`+${SEG[i]}`:`${SEG[i]}`);
+    c.fillText(v,-18,10); c.restore();
   }
-  wheelEl.style.transform=`rotate(${angle}deg)`;
-}
-function render(){
-  pMe.textContent=P.pt; pAI.textContent=A.pt; focusEl.textContent=P.focus; handN.textContent=P.hand.length;
-  wheelEl.style.transform=`rotate(${angle}deg)`;
-  // hand
-  handEl.innerHTML='';
-  P.hand.forEach((cid,i)=>{
-    const c=getCard(cid); const enough=P.focus>=c.cost;
-    const div=document.createElement('div'); div.className='cx'+(enough?'':' dis');
-    div.innerHTML=`<div class="cost">F${c.cost}</div><b>${c.name}</b><div class="small">${c.txt}</div>`;
-    if(enough) div.onclick=()=>playCard(i);
-    handEl.appendChild(div);
-  });
-}
-function currentIndex(){ const cur=(((-angle)%360)+360)%360; return Math.round(cur/ASEC)%segs.length; }
-
-// ===== Cards / Deck =====
-function card(id,name,cost,txt,play){ return {id,name,cost,txt,play}; }
-const POOL=[
-  card('p15','+15°',1,'角度を+15°進める', ()=>{ angle+=15; sfx('buff'); }),
-  card('m15','-15°',1,'角度を-15°戻す', ()=>{ angle-=15; sfx('buff'); }),
-  card('p30','+30°',1,'角度を+30°進める', ()=>{ angle+=30; sfx('buff'); }),
-  card('spin2','再スピン',2,'このスピンは2回行い良い方を採用', ()=>{ P.respin=true; sfx('buff'); }),
-  card('x2','x2付与',1,'次の結果を×2にする', ()=>{ P.multNext=2; sfx('buff'); }),
-  card('shield','シールド',1,'次に負の結果なら0にする', ()=>{ P.shield=true; sfx('buff'); }),
-  card('bias','指向',1,'最寄りの高得点へ角度をスナップ', ()=>{ snapBest(); sfx('buff'); }),
-  card('steal2','奪取2',1,'即座に相手から2点奪う', ()=>{ const n=Math.min(2,A.pt); A.pt-=n; P.pt+=n; sfx('hit'); }),
-];
-const DEFAULT_DECK=['p15','m15','p30','spin2','x2','shield','bias','steal2','p15','x2','bias','p30','m15','steal2','shield'];
-
-function getCard(id){ return POOL.find(c=>c.id===id); }
-function buildDeck(list){ const d=list.slice(); for(let i=d.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [d[i],d[j]]=[d[j],d[i]]; } return d; }
-function loadDeck(){ try{ const s=localStorage.getItem('wof_deck'); if(s){ const arr=JSON.parse(s); if(Array.isArray(arr)&&arr.length) return arr; } }catch{} return DEFAULT_DECK.slice(); }
-function saveDeck(list){ try{ localStorage.setItem('wof_deck', JSON.stringify(list)); }catch{} }
-function openDeck(){
-  const list=loadDeck();
-  let html='<div class="small">カードをタップで追加、デッキ内のカードをタップで削除。推奨10〜18枚（現在 '+list.length+' 枚）。</div><div class="rowbtn">';
-  POOL.forEach(c=>{ html+=`<button class="btn" data-add="${c.id}">${c.name}</button>`; });
-  html+='</div><hr style="border:none;border-top:1px dashed #2a3b77;margin:10px 0"/><div id="deckList" class="rowbtn">';
-  list.forEach((id,i)=>{ const c=getCard(id); html+=`<button class="btn" data-rem="${i}">${c.name}</button>`; });
-  html+='</div>';
-  showOverlay('デッキ編集', html);
-  const box=document.getElementById('ovBody');
-  box.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>{ list.push(b.dataset.add); saveDeck(list); openDeck(); }));
-  box.querySelectorAll('[data-rem]').forEach(b=>b.addEventListener('click',()=>{ const idx=Number(b.dataset.rem); list.splice(idx,1); saveDeck(list); openDeck(); }));
+  c.restore();
 }
 
-// ===== Draw =====
-function draw(me,n){ for(let i=0;i<n;i++){ if(!me.deck||me.deck.length===0){ me.deck=buildDeck(me.discard||[]); me.discard=[]; } if(me.deck.length) me.hand.push(me.deck.pop()); } }
-function discard(me,id){ me.discard=me.discard||[]; me.discard.push(id); }
-
-function playCard(i){
-  const id=P.hand.splice(i,1)[0]; const c=getCard(id);
-  P.focus-=c.cost; c.play(); discard(P,id);
-  wheelRender(); render();
-}
-
-function snapBest(){
-  // choose nearest positive seg with highest value
-  const curIdx=currentIndex();
-  let bestIdx=curIdx, bestVal=-999, bestDist=999;
-  for(let k=0;k<segs.length;k++){
-    const s=segs[k]; const val = s.tag==='steal4'?4 : s.tag==='swap'? 3 : s.tag==='x2'? 0 : s.val;
-    if(val>0){
-      const dist=Math.min((k-curIdx+segs.length)%segs.length,(curIdx-k+segs.length)%segs.length);
-      if(val>bestVal || (val===bestVal && dist<bestDist)){ bestVal=val; bestDist=dist; bestIdx=k; }
-    }
+/* ===== Resolve result ===== */
+function resultFromAngle(angle, who){
+  // 0度が上（ポインタ）に来るよう正規化
+  const norm=((360 - (angle%360))+360)%360;
+  const idx=Math.floor(norm/BASE_DEG)%SEG.length;
+  let v=SEG[idx];
+  // 危険度：スカル拡張（左右に risk*2 度）
+  if(v!==null){
+    const skullCenter=SKULL_INDEX*BASE_DEG+BASE_DEG/2;
+    const dist=Math.min(Math.abs(norm-skullCenter),360-Math.abs(norm-skullCenter));
+    const extra=(S.risk*2) * (who.art.id==='aim'?0.8:1); // エイムなら縮小
+    if(dist<BASE_DEG/2 + extra) v=null;
   }
-  angle = -(bestIdx*ASEC);
+  // アクセル
+  if(v!==null && v>0 && who.art.id==='accel') v+=1;
+  return {index:idx, value:v};
 }
 
-// ===== Spin mechanics =====
-let busy=false;
-spinBtn.onclick=()=>{ if(busy) return; busy=true; spinBtn.disabled=true; playerSpinSequence(); };
-
-function spinToIndex(idx){
-  angle = -(idx*ASEC + 360*3); // add some rotations for flair
-  wheelEl.style.transform=`rotate(${angle}deg)`;
+/* ===== Spin ===== */
+function spinOnce(){
+  if(S.spinning||S.turn!=='you') return;
+  S.spinning=true;
+  // ランダム回転量：2~4回転＋微調整
+  const delta=720 + Math.random()*720 + Math.random()*360;
+  const start=S.angle, end=start+delta;
+  const T=1200, t0=performance.now();
+  const step=(t)=>{
+    const p=clamp((t-t0)/T,0,1); const ease=1- Math.pow(1-p,3);
+    S.angle=start + (end-start)*ease; drawWheel();
+    if(p<1) requestAnimationFrame(step); else { S.spinning=false; afterSpin('you'); }
+  };
+  requestAnimationFrame(step);
 }
-
-function effectiveValueFor(who, idx){
-  const s=segs[idx];
-  if(s.tag==='steal4') return 4;
-  if(s.tag==='swap') return Math.min(3, Math.abs(P.pt-A.pt));
-  if(s.tag==='x2') return 0.5; // small preference
-  return s.val;
-}
-
-function pickRandomIndex(biasN=lockNarrow){
-  // random index near current index if lockNarrow>0
-  const base = currentIndex();
-  if(biasN>0){
-    const delta = (Math.floor(Math.random()* (biasN*2+1)) - biasN);
-    const idx = (base + delta + segs.length)%segs.length;
-    return idx;
-  }
-  return (Math.random()*segs.length)|0;
-}
-
-function applySeg(who, idx){
-  const s=segs[idx];
-  let mult = (who==='P'?P.multNext:A.multNext);
-  if(s.tag==='x2'){ if(who==='P') P.multNext=2; else A.multNext=2; log(`${who==='P'?'あなた':'AI'}：次の結果 x2 付与`); return; }
-  let val = s.val;
-  if(val<0 && ((who==='P'&&P.shield)|| (who==='A'&&A.shield))){ val=0; if(who==='P') P.shield=false; else A.shield=false; log(`${who==='P'?'あなた':'AI'}：シールドで負数を無効化`); }
-  if(s.tag==='steal4'){
-    const n=4; if(who==='P'){ const g=Math.min(n,A.pt); A.pt-=g; P.pt+=g; } else { const g=Math.min(n,P.pt); P.pt-=g; A.pt+=g; } log(`奪取 ${n}`);
-  }else if(s.tag==='swap'){
-    const d=Math.min(3, Math.abs(P.pt-A.pt)); if(P.pt>A.pt){ P.pt-=d; A.pt+=d; } else { A.pt+=d; P.pt-=d; } log(`交換 ${d}`);
+function afterSpin(side){
+  const who= side==='you'? S.you : S.ai;
+  const res=resultFromAngle(S.angle, who);
+  if(res.value===null){ // Skull
+    if(who.art.id==='shield'){ who.art={...who.art,id:'used',name:'🛡消費',effect:'—'}; log(`🛡 シールドでスカル無効！`); }
+    else if(!who.usedIns && side==='you' && INS_ACTIVE){ who.usedIns=true; log(`🛡 保険でスカル回避！（今だけ）`); }
+    else { who.round=0; S.risk=0; log(`${side==='you'?'あなた':'AI'} ☠ バースト！`); turnSwap(); updateHeader(); return; }
   }else{
-    if(who==='P'){ P.pt=Math.max(0, P.pt + Math.round(val*mult)); } else { A.pt=Math.max(0, A.pt + Math.round(val*mult)); }
+    let add=res.value;
+    if(add<0){
+      if(who.art.id==='shield'){ who.art={...who.art,id:'used',name:'🛡消費',effect:'—'}; add=0; log(`🛡 シールドでマイナス無効！`); }
+      else if(!who.usedIns && side==='you' && INS_ACTIVE){ who.usedIns=true; add=Math.ceil(add/2); log(`🛡 保険で半減：${add}`); }
+    }
+    who.round+=add;
+    S.risk++;
+    log(`${side==='you'?'あなた':'AI'} 結果：${add>=0?'+':''}${add}（累計 ${who.round}） 危険度 ${S.risk}`);
   }
-  // reset one-time mult
-  if(who==='P'){ P.multNext=1; } else { A.multNext=1; }
-  render();
+  updateHeader();
+  if(side==='you'){ // ここで終了/続行はボタンで
+  }else{ aiDecide(); }
 }
 
-async function playerSpinSequence(){
-  statusEl.textContent='回転中…';
-  // choose index: if respin flag, roll twice and take better
-  const first = pickRandomIndex();
-  const second = P.respin? pickRandomIndex() : null;
-  const chosen = P.respin? betterOf(first, second, 'P') : first;
-  P.respin=false;
-  spinToIndex(chosen);
-  await wait(1000);
-  applySeg('P', chosen);
-  lockNarrow=0; // reset narrow lock after use
-  render();
-  if(checkEnd()) return;
-  await wait(250);
-  aiTurn();
+/* ===== Bank / Insurance ===== */
+let INS_ACTIVE=false;
+function bank(){
+  if(S.turn!=='you') return;
+  S.you.score+=S.you.round; S.you.round=0; S.risk=0; INS_ACTIVE=false; S.you.usedIns=false;
+  log(`💰 バンク！ あなた総得点 ${S.you.score}`);
+  updateHeader(); turnSwap();
+}
+function useInsurance(){
+  if(S.turn!=='you') return;
+  if(INS_ACTIVE){ tip('既にオン'); return; }
+  INS_ACTIVE=true; tip('保険オン（今ラウンド一度だけ）');
 }
 
-function betterOf(a,b,who){
-  // compare by effective value (approx)
-  const va = effectiveValueFor(who==='P'?P:A, a);
-  const vb = effectiveValueFor(who==='P'?P:A, b);
-  return (vb>va)? b : a;
-}
-
-async function aiTurn(){
-  // AI plays up to 2 cards based on behind/lead
-  aiPlayCards();
-  render();
-  await wait(200);
-  const idx = pickRandomIndex();
-  spinToIndex(idx);
-  await wait(1000);
-  applySeg('A', idx);
-  render();
-  if(checkEnd()) return;
-  endRound();
-}
-
-function aiPlayCards(){
-  let plays=0;
-  const behind = A.pt < P.pt;
-  // simple heuristics
-  function tryPlay(id){ const i=A.hand.indexOf(id); if(i!==-1){ const c=getCard(id); if(A.focus>=c.cost){ A.focus-=c.cost; c.playAI? c.playAI() : c.play(); A.hand.splice(i,1); A.discard.push(id); plays++; } } }
-  // AI version of cards
-  POOL.forEach(c=>{ if(!c.playAI){ c.playAI=c.play; } });
-  // If behind, bias towards +30, bias, x2, steal2
-  if(behind){ tryPlay('p30'); tryPlay('bias'); tryPlay('x2'); tryPlay('steal2'); }
-  else{ tryPlay('shield'); tryPlay('p15'); }
-  // ensure max 2 plays
-  if(plays<2){ tryPlay('p15'); }
-}
-
-function endRound(){
-  draw(P,1); draw(A,1);
-  P.focus=Math.min(6, P.focus+2); A.focus=Math.min(6, (A.focus||2)+2);
-  render();
-  spinBtn.disabled=false; busy=false;
-  statusEl.textContent='カードで角度や効果を操作 → 「スピン！」';
-}
-
-function wait(ms){ return new Promise(res=>setTimeout(res, ms)); }
-
-function checkEnd(){
-  if(P.pt>=30 || A.pt>=30){
-    const msg = P.pt>=30?'勝利！':'敗北…';
-    showOverlay('対戦結果', `<div class="rowbtn"><span class="pill">${msg}</span><span class="pill">あなた ${P.pt} ／ AI ${A.pt}</span></div>`);
-    spinBtn.disabled=true; busy=false; return true;
+/* ===== AI ===== */
+function aiTurn(){
+  if(S.spinning) return;
+  // 戦略：期待値 > リスク閾値 で回す。簡易ヒューリスティック
+  const lead=S.ai.score - S.you.score;
+  const safe= S.risk<2;
+  const target = lead<5 ? 8 : 5; // 追うときは強気
+  if(S.ai.round>=target || !safe){ // バンク
+    S.ai.score+=S.ai.round; S.ai.round=0; S.risk=0; S.ai.usedIns=false;
+    log(`🤖 💰 バンク。AI総得点 ${S.ai.score}`); updateHeader(); turnSwap(); return;
   }
-  return false;
+  // たまに保険
+  if(!S.ai.usedIns && Math.random()<0.25){ S.ai.usedIns=true; log('🤖 🛡（AIは保険を温存扱い：マイナス時自動）'); }
+  // スピン
+  S.spinning=true;
+  const delta=720 + Math.random()*720 + Math.random()*360;
+  const start=S.angle, end=start+delta; const T=1100, t0=performance.now();
+  const step=(t)=>{ const p=clamp((t-t0)/T,0,1); const ease=1- Math.pow(1-p,3); S.angle=start+(end-start)*ease; drawWheel();
+    if(p<1) requestAnimationFrame(step); else { S.spinning=false; // resolve
+      const res=resultFromAngle(S.angle,S.ai);
+      if(res.value===null){
+        if(S.ai.art.id==='shield'){ S.ai.art={...S.ai.art,id:'used',name:'🛡消費',effect:'—'}; log('🤖 🛡 シールドでスカル回避'); }
+        else { S.ai.round=0; S.risk=0; log('🤖 ☠ バースト'); turnSwap(); updateHeader(); }
+      }else{
+        let add=res.value;
+        if(add<0 && S.ai.usedIns){ add=Math.ceil(add/2); log('🤖 🛡 保険で半減'); }
+        if(add<0 && S.ai.art.id==='shield'){ add=0; S.ai.art={...S.ai.art,id:'used',name:'🛡消費',effect:'—'}; log('🤖 🛡 マイナス無効'); }
+        if(add>0 && S.ai.art.id==='accel') add+=1;
+        S.ai.round+=add; S.risk++; log(`🤖 結果：${add>=0?'+':''}${add}（累計 ${S.ai.round}） 危険度 ${S.risk}`);
+        updateHeader(); setTimeout(aiTurn, 450);
+      }
+    } };
+  requestAnimationFrame(step);
+}
+function aiDecide(){ setTimeout(aiTurn, 500); }
+
+/* ===== Turn & Header ===== */
+function turnSwap(){ S.turn = (S.turn==='you')?'ai':'you'; if(S.turn==='ai') aiTurn(); }
+function updateHeader(){
+  document.getElementById('scoreP').textContent=S.you.score;
+  document.getElementById('scoreA').textContent=S.ai.score;
+  document.getElementById('risk').textContent=S.risk;
+  document.getElementById('round').textContent=S.you.round;
+  document.getElementById('roundA').textContent=S.ai.round;
+  document.getElementById('art').textContent=S.you.art.name;
 }
 
-// ===== Boot =====
-function startMatch(){
-  angle=0; lockNarrow=0;
-  P={pt:0, hand:[], focus:2, multNext:1, shield:false, respin:false, deck:buildDeck(loadDeck()), discard:[]};
-  A={pt:0, hand:[], focus:2, multNext:1, shield:false, respin:false, deck:buildDeck(DEFAULT_DECK.slice()), discard:[]};
-  logEl.innerHTML='';
-  wheelRender(); draw(P,3); draw(A,2); render(); log('対戦開始：カードで運命をねじ曲げよう。');
-}
-startMatch();
+/* ===== Controls ===== */
+document.getElementById('spin').onclick=()=>spinOnce();
+document.getElementById('bank').onclick=()=>bank();
+document.getElementById('ins').onclick=()=>useInsurance();
+document.getElementById('new').onclick=()=>reset();
+
+/* ===== Zoom ===== */
+const zr=document.getElementById('z'), zm=document.getElementById('z-'), zp=document.getElementById('z+');
+const applyZoom=v=>{ const x=clamp(v,260,420); zr.value=x; document.documentElement.style.setProperty('--size',x+'px'); drawWheel(); };
+zr.oninput=()=>applyZoom(+zr.value); zm.onclick=()=>applyZoom(+zr.value-20); zp.onclick=()=>applyZoom(+zr.value+20);
+
+/* ===== Boot ===== */
+window.addEventListener('load',()=>{ applyZoom(+zr.value); reset(); });
 </script>
 </body>
 </html>
