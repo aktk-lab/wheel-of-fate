@@ -1,24 +1,29 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>🎡 運命の輪 — Lean v2</title>
+<title>🎡 運命の輪 — CanvasFix v2.1</title>
 <style>
 :root{--size:340px}
-*{box-sizing:border-box}body{margin:0;background:#0b1120;color:#e5f0ff;font:16px/1.6 system-ui,"Noto Sans JP",sans-serif;text-align:center}
+*{box-sizing:border-box}
+body{margin:0;background:#0b1120;color:#e5f0ff;font:16px/1.6 system-ui,"Noto Sans JP",sans-serif;text-align:center}
 h1{font-size:18px;margin:10px 6px}
 .header{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center;padding:8px}
 .pill{border:1px solid #334155;border-radius:999px;padding:4px 10px;background:#0f172a;font-size:12px}
 .btn{padding:9px 12px;border-radius:10px;border:1px solid #334155;background:#1e293b;color:#e5f0ff;cursor:pointer}
-.btn:active{transform:translateY(1px)} input[type=range]{width:140px}
+.btn:active{transform:translateY(1px)}
+input[type=range]{width:140px}
 .wrap{max-width:960px;margin:0 auto;padding:8px}
 .card{background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:800px){.card{grid-template-columns:1fr}}
-canvas{width:var(--size);height:var(--size);background:#0a1536;border:1px solid #334155;border-radius:50%;margin:auto;display:block}
-.pointer{margin:6px 0} .pointer::after{content:"▲";font-size:22px}
-.small{font-size:12px;color:#cbd5e1;max-height:160px;overflow:auto}
+canvas{display:block;margin:auto;border-radius:50%;background:#0a1536;border:1px solid #334155}
+.pointer{margin:6px 0}.pointer::after{content:"▲";font-size:22px}
+.small{font-size:12px;color:#cbd5e1;max-height:180px;overflow:auto;text-align:left}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:80px;background:#0f172a;border:1px solid #334155;color:#e5e7eb;padding:8px 12px;border-radius:10px;opacity:0;transition:opacity .2s, transform .35s;z-index:10}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(-8px)}
-</style></head><body>
-<h1>🎡 運命の輪 — Lean v2</h1>
+</style>
+</head>
+<body>
+<h1>🎡 運命の輪 — CanvasFix v2.1</h1>
 <div class="header">
   <span class="pill">🧙 総得点:<b id="pS">0</b></span>
   <span class="pill">🤖 総得点:<b id="aS">0</b></span>
@@ -28,13 +33,14 @@ canvas{width:var(--size);height:var(--size);background:#0a1536;border:1px solid 
   <button id="ins" class="btn">🛡 保険</button>
   <button id="unlock" class="btn">🔓 強制解除</button>
   <button id="new" class="btn">🔁 リセット</button>
-  <button id="z-" class="btn">−</button><input id="z" type="range" min="280" max="420" value="340"><button id="z+" class="btn">＋</button>
+  <button id="z-" class="btn">−</button><input id="z" type="range" min="280" max="480" value="340"><button id="z+" class="btn">＋</button>
 </div>
+
 <div class="wrap">
   <div class="card">
     <div>
       <div class="pointer"></div>
-      <canvas id="wheel" width="640" height="640"></canvas>
+      <canvas id="wheel" width="640" height="640" aria-label="wheel"></canvas>
       <div style="margin-top:8px" class="small">あなたラウンド: <b id="pR">0</b> / AIラウンド: <b id="aR">0</b></div>
     </div>
     <div>
@@ -45,96 +51,150 @@ canvas{width:var(--size);height:var(--size);background:#0a1536;border:1px solid 
 <div id="toast" class="toast">text</div>
 
 <script>
-/* ===== utils ===== */
-const tip=t=>{const el=document.getElementById('toast'); el.textContent=t; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),900);}
-const log=m=>{const L=document.getElementById('log'); L.innerHTML+=m+'<br>'; L.scrollTop=L.scrollHeight;}
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)); const rad=d=>d*Math.PI/180;
+(function(){
+  "use strict";
+  const SEG=[3,2,4,1,null,3,-2,5,1,-3,4,2];
+  const COLORS=["#34d399","#60a5fa","#f472b6","#fde047","#ef4444","#22c55e","#93c5fd","#f59e0b","#a3e635","#ef4444","#10b981","#60a5fa"];
+  const BASE_DEG=360/SEG.length;
+  const SKULL=SEG.findIndex(v=>v===null);
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const rad=d=>d*Math.PI/180;
+  const el=(id)=>document.getElementById(id);
+  const tip=(t)=>{const x=el('toast'); x.textContent=t; x.classList.add('show'); setTimeout(()=>x.classList.remove('show'),900);};
+  const log=(m)=>{const L=el('log'); L.innerHTML+=m+'<br>'; L.scrollTop=L.scrollHeight;};
 
-/* ===== data ===== */
-const SEG=[3,2,4,1,null,3,-2,5,1,-3,4,2]; const COLORS=["#34d399","#60a5fa","#f472b6","#fde047","#ef4444","#22c55e","#93c5fd","#f59e0b","#a3e635","#ef4444","#10b981","#60a5fa"];
-const BASE_DEG=360/SEG.length; const SKULL=SEG.findIndex(v=>v===null);
+  let wheel, ctx, state;
 
-/* ===== state ===== */
-let S;
-function reset(){
-  S={angle:0,spinning:false,risk:0,ins:false,turn:'you',you:{score:0,round:0},ai:{score:0,round:0}};
-  update(); draw();
-  document.getElementById('log').innerHTML=''; log('▶️ 開始');
-}
-function update(){
-  pS.textContent=S.you.score; aS.textContent=S.ai.score; risk.textContent=S.risk; pR.textContent=S.you.round; aR.textContent=S.ai.round;
-}
-
-/* ===== draw wheel ===== */
-function draw(){
-  const cv=wheel, c=cv.getContext('2d'), R=cv.width/2; c.clearRect(0,0,cv.width,cv.height);
-  c.save(); c.translate(R,R); c.rotate(rad(S.angle));
-  for(let i=0;i<SEG.length;i++){ const a0=rad(i*BASE_DEG), a1=rad((i+1)*BASE_DEG);
-    c.beginPath(); c.moveTo(0,0); c.arc(0,0,R,a0,a1); c.closePath(); c.fillStyle=COLORS[i%COLORS.length]; c.fill();
-    c.save(); c.rotate(a0+(a1-a0)/2); c.translate(R*0.66,0); c.rotate(-rad(S.angle)); c.fillStyle="#0b1120"; c.font="bold 32px system-ui"; const v=SEG[i]==null?"☠":(SEG[i]>0?`+${SEG[i]}`:`${SEG[i]}`); c.fillText(v,-18,10); c.restore();
+  function setCanvasSize(px){
+    // CSSサイズと実ピクセルを同期
+    const dpr = window.devicePixelRatio || 1;
+    wheel.style.width = wheel.style.height = px + 'px';
+    wheel.width = Math.round(px*dpr);
+    wheel.height= Math.round(px*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0); // 座標をCSSピクセルに
+    draw();
   }
-  c.restore();
-}
 
-/* ===== resolve ===== */
-function result(angle, who){
-  const norm=((360-(angle%360))+360)%360; const idx=Math.floor(norm/BASE_DEG)%SEG.length;
-  let v=SEG[idx];
-  // 危険度：スカルの許容角度追加
-  if(v!==null){
-    const skullCenter=SKULL*BASE_DEG+BASE_DEG/2; const dist=Math.min(Math.abs(norm-skullCenter),360-Math.abs(norm-skullCenter));
-    const extra=S.risk*2; if(dist<BASE_DEG/2+extra) v=null;
+  function reset(){
+    state = {angle:0, spinning:false, risk:0, ins:false, turn:'you',
+             you:{score:0,round:0}, ai:{score:0,round:0}};
+    updateHUD(); draw();
+    el('log').innerHTML=''; log('▶️ 開始');
   }
-  return {idx,value:v};
-}
 
-/* ===== spin/bank/ai ===== */
-function spin(side){
-  if(S.spinning) return; if(side==='you' && S.turn!=='you') return;
-  S.spinning=true;
-  const start=S.angle, end=start+720+Math.random()*720+Math.random()*360, T=1200, t0=performance.now();
-  const step=t=>{ const p=clamp((t-t0)/T,0,1), e=1-Math.pow(1-p,3); S.angle=start+(end-start)*e; draw();
-    if(p<1) requestAnimationFrame(step); else { S.spinning=false; afterSpin(side); } };
-  requestAnimationFrame(step);
-}
-function afterSpin(side){
-  const who = side==='you'? S.you : S.ai;
-  const r=result(S.angle,who);
-  if(r.value===null){
-    if(side==='you' && S.ins){ S.ins=false; log('🛡 保険発動：バースト回避'); }
-    else { who.round=0; S.risk=0; log(`${side==='you'?'あなた':'AI'} ☠ バースト！`); S.turn = (side==='you')?'ai':'you'; update(); if(S.turn==='ai') setTimeout(ai,450); return; }
-  }else{
-    let add=r.value; if(add<0 && side==='you' && S.ins){ add=Math.ceil(add/2); S.ins=false; log('🛡 保険でマイナス半減'); }
-    who.round += add; S.risk++;
-    log(`${side==='you'?'あなた':'AI'} 結果 ${add>=0?'+':''}${add} / 累計 ${who.round} / 危険度 ${S.risk}`);
+  function updateHUD(){
+    el('pS').textContent=state.you.score;
+    el('aS').textContent=state.ai.score;
+    el('risk').textContent=state.risk;
+    el('pR').textContent=state.you.round;
+    el('aR').textContent=state.ai.round;
   }
-  update();
-  if(side==='ai') setTimeout(ai,500);
-}
-function bank(){
-  if(S.turn!=='you'||S.spinning) return;
-  S.you.score+=S.you.round; S.you.round=0; S.risk=0; S.ins=false; update(); log(`💰 バンク → あなた ${S.you.score}`);
-  S.turn='ai'; ai();
-}
-function ai(){
-  if(S.spinning) return;
-  // 簡易方針：ラウンド>=8 ならバンク／危険度>=3 ならバンク／それ以外スピン
-  if(S.ai.round>=8 || S.risk>=3){ S.ai.score+=S.ai.round; S.ai.round=0; S.risk=0; update(); log(`🤖 💰 バンク → ${S.ai.score}`); S.turn='you'; return; }
-  spin('ai');
-}
 
-/* ===== controls ===== */
-spinBtn= document.getElementById('spin'); bankBtn=document.getElementById('bank'); insBtn=document.getElementById('ins');
-spinBtn.onclick=()=>spin('you'); bankBtn.onclick=()=>bank();
-insBtn.onclick=()=>{ if(S.turn!=='you') return; S.ins=true; tip('保険オン（次のマイナス/スカルに適用）'); };
-document.getElementById('unlock').onclick=()=>{ S.spinning=false; tip('🔓解除'); };
-document.getElementById('new').onclick=()=>reset();
+  function draw(){
+    if(!ctx) return;
+    const R = Math.min(wheel.width, wheel.height) / 2;
+    ctx.clearRect(0,0,wheel.width, wheel.height);
+    ctx.save(); ctx.translate(R,R); ctx.rotate(rad(state.angle));
+    for(let i=0;i<SEG.length;i++){
+      const a0=rad(i*BASE_DEG), a1=rad((i+1)*BASE_DEG);
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,R,a0,a1); ctx.closePath();
+      ctx.fillStyle=COLORS[i%COLORS.length]; ctx.fill();
+      ctx.save(); ctx.rotate(a0+(a1-a0)/2); ctx.translate(R*0.66,0); ctx.rotate(-rad(state.angle));
+      ctx.fillStyle="#0b1120"; ctx.font="bold 32px system-ui";
+      const v=SEG[i]==null?"☠":(SEG[i]>0?`+${SEG[i]}`:`${SEG[i]}`); ctx.fillText(v,-18,10);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
 
-/* ===== zoom ===== */
-const zr=document.getElementById('z'); const applyZoom=v=>{const x=clamp(v,280,420); zr.value=x; document.documentElement.style.setProperty('--size',x+'px'); draw();};
-document.getElementById('z-').onclick=()=>applyZoom(+zr.value-20); document.getElementById('z+').onclick=()=>applyZoom(+zr.value+20); zr.oninput=()=>applyZoom(+zr.value);
+  function getResult(){
+    const norm=((360-(state.angle%360))+360)%360;
+    const idx=Math.floor(norm/BASE_DEG)%SEG.length;
+    let v=SEG[idx];
+    if(v!==null){
+      const skullCenter=SKULL*BASE_DEG+BASE_DEG/2;
+      const dist=Math.min(Math.abs(norm-skullCenter),360-Math.abs(norm-skullCenter));
+      const extra=state.risk*2;
+      if(dist<BASE_DEG/2+extra) v=null;
+    }
+    return {idx,value:v};
+  }
 
-/* ===== boot ===== */
-window.onload=()=>{applyZoom(+zr.value); reset();}
+  function spin(side){
+    if(state.spinning) return;
+    if(side==='you' && state.turn!=='you') return;
+    state.spinning=true;
+    const start=state.angle, end=start+720+Math.random()*720+Math.random()*360;
+    const T=1200, t0=performance.now();
+    const step=(t)=>{
+      const p=clamp((t-t0)/T,0,1), ease=1-Math.pow(1-p,3);
+      state.angle=start+(end-start)*ease;
+      draw();
+      if(p<1) requestAnimationFrame(step);
+      else { state.spinning=false; resolve(side); }
+    };
+    requestAnimationFrame(step);
+  }
+
+  function resolve(side){
+    const who=(side==='you')?state.you:state.ai;
+    const r=getResult();
+    if(r.value===null){
+      if(side==='you' && state.ins){ state.ins=false; log('🛡 保険発動：バースト回避'); }
+      else { who.round=0; state.risk=0; log(`${side==='you'?'あなた':'AI'} ☠ バースト！`); state.turn=(side==='you')?'ai':'you'; updateHUD(); if(state.turn==='ai') setTimeout(ai,450); return; }
+    }else{
+      let add=r.value;
+      if(add<0 && side==='you' && state.ins){ add=Math.ceil(add/2); state.ins=false; log('🛡 保険でマイナス半減'); }
+      who.round += add; state.risk++;
+      log(`${side==='you'?'あなた':'AI'} 結果 ${add>=0?'+':''}${add} / 累計 ${who.round} / 危険度 ${state.risk}`);
+    }
+    updateHUD();
+    if(side==='ai') setTimeout(ai,500);
+  }
+
+  function bank(){
+    if(state.turn!=='you' || state.spinning) return;
+    state.you.score+=state.you.round; state.you.round=0; state.risk=0; state.ins=false;
+    log(`💰 バンク → あなた ${state.you.score}`); updateHUD(); state.turn='ai'; ai();
+  }
+
+  function ai(){
+    if(state.spinning) return;
+    if(state.ai.round>=8 || state.risk>=3){
+      state.ai.score+=state.ai.round; state.ai.round=0; state.risk=0; updateHUD(); log(`🤖 💰 バンク → ${state.ai.score}`); state.turn='you'; return;
+    }
+    spin('ai');
+  }
+
+  function bindEvents(){
+    el('spin').onclick = ()=>spin('you');
+    el('bank').onclick = ()=>bank();
+    el('ins').onclick  = ()=>{ if(state.turn!=='you') return; state.ins=true; tip('保険オン（次のマイナス/スカルに適用）'); };
+    el('unlock').onclick=()=>{ state.spinning=false; tip('🔓解除'); };
+    el('new').onclick  = ()=>reset();
+    const zr=el('z');
+    const apply=(v)=>{
+      const x=clamp(+v,280,480);
+      zr.value=x;
+      document.documentElement.style.setProperty('--size', x+'px');
+      setCanvasSize(x); // CSSと実ピクセルを同期
+    };
+    el('z-').onclick=()=>apply(zr.value-20);
+    el('z+').onclick=()=>apply(+zr.value+20);
+    zr.oninput=()=>apply(zr.value);
+    // 初期ズーム反映
+    apply(el('z').value);
+  }
+
+  window.onload = function(){
+    wheel = el('wheel');
+    const c = wheel.getContext && wheel.getContext('2d');
+    if(!c){ tip('⚠️ Canvasが使えません'); return; }
+    ctx = c;
+    bindEvents();
+    reset();
+  };
+})();
 </script>
-</body></html>
+</body>
+</html>
