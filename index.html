@@ -1,239 +1,140 @@
-<!doctype html>
-<html lang="ja"><head><meta charset="utf-8">
+<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>🎡 運命の輪 — Fate Wheel v2</title>
+<title>🎡 運命の輪 — Lean v2</title>
 <style>
-:root{ --size:320px; }
-*{box-sizing:border-box} body{margin:0;background:radial-gradient(800px 500px at 50% -10%,rgba(250,204,21,.12),transparent 60%),linear-gradient(180deg,#0b0f22,#151a35);color:#eaf2ff;font:16px/1.6 system-ui,"Noto Sans JP",sans-serif;text-align:center}
-h1{font-size:18px;margin:10px 6px;text-shadow:0 0 14px rgba(250,204,21,.35)}
+:root{--size:340px}
+*{box-sizing:border-box}body{margin:0;background:#0b1120;color:#e5f0ff;font:16px/1.6 system-ui,"Noto Sans JP",sans-serif;text-align:center}
+h1{font-size:18px;margin:10px 6px}
 .header{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center;padding:8px}
-.pill{border:1px solid #2b3e7a;border-radius:999px;padding:4px 10px;background:#10183a;color:#dbeafe;font-size:12px}
-.btn{padding:9px 12px;border-radius:12px;border:1px solid #2b3e7a;background:#132761;color:#eef5ff;cursor:pointer}
-.btn:active{transform:translateY(1px)}
-.zoom{display:flex;gap:6px;align-items:center} input[type=range]{width:150px}
-.wrap{max-width:980px;margin:0 auto;padding:8px}
-.card{background:rgba(7,14,26,.85);border:1px solid #23346e;border-radius:14px;padding:12px;box-shadow:0 12px 36px rgba(0,0,0,.35);display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:800px){ .card{grid-template-columns:1fr} }
-canvas{width:var(--size);height:var(--size);background:#0a1536;border:1px solid #2b3e83;border-radius:50%;margin:auto}
-.pointer{position:relative;display:flex;justify-content:center;margin:6px 0}
-.pointer::after{content:"▲";font-size:22px}
-.actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-.small{font-size:12px;color:#b8c8ea;max-height:160px;overflow:auto}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;background:#101a3a;border:1px solid #2a3b77;color:#e5e7eb;padding:8px 12px;border-radius:10px;opacity:0;transition:opacity .2s, transform .35s;z-index:10}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(-10px)}
-</style>
-</head>
-<body>
-  <h1>🎡 運命の輪 — Fate Wheel v2（危険度・アーティファクト・保険）</h1>
-  <div class="header">
-    <span class="pill">🧙 あなた総得点:<b id="scoreP">0</b></span>
-    <span class="pill">🤖 AI総得点:<b id="scoreA">0</b></span>
-    <span class="pill">🎯 危険度:<b id="risk">0</b></span>
-    <span class="pill">🎁 アーティファクト:<b id="art">—</b></span>
-    <button id="new" class="btn">🔁 リセット</button>
-    <div class="zoom">
-      <button id="z-" class="btn">−</button>
-      <input id="z" type="range" min="260" max="420" value="320">
-      <button id="z+" class="btn">＋</button>
+.pill{border:1px solid #334155;border-radius:999px;padding:4px 10px;background:#0f172a;font-size:12px}
+.btn{padding:9px 12px;border-radius:10px;border:1px solid #334155;background:#1e293b;color:#e5f0ff;cursor:pointer}
+.btn:active{transform:translateY(1px)} input[type=range]{width:140px}
+.wrap{max-width:960px;margin:0 auto;padding:8px}
+.card{background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:800px){.card{grid-template-columns:1fr}}
+canvas{width:var(--size);height:var(--size);background:#0a1536;border:1px solid #334155;border-radius:50%;margin:auto;display:block}
+.pointer{margin:6px 0} .pointer::after{content:"▲";font-size:22px}
+.small{font-size:12px;color:#cbd5e1;max-height:160px;overflow:auto}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:80px;background:#0f172a;border:1px solid #334155;color:#e5e7eb;padding:8px 12px;border-radius:10px;opacity:0;transition:opacity .2s, transform .35s;z-index:10}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-8px)}
+</style></head><body>
+<h1>🎡 運命の輪 — Lean v2</h1>
+<div class="header">
+  <span class="pill">🧙 総得点:<b id="pS">0</b></span>
+  <span class="pill">🤖 総得点:<b id="aS">0</b></span>
+  <span class="pill">🎯 危険度:<b id="risk">0</b></span>
+  <button id="spin" class="btn">🎲 スピン</button>
+  <button id="bank" class="btn">💰 バンク</button>
+  <button id="ins" class="btn">🛡 保険</button>
+  <button id="unlock" class="btn">🔓 強制解除</button>
+  <button id="new" class="btn">🔁 リセット</button>
+  <button id="z-" class="btn">−</button><input id="z" type="range" min="280" max="420" value="340"><button id="z+" class="btn">＋</button>
+</div>
+<div class="wrap">
+  <div class="card">
+    <div>
+      <div class="pointer"></div>
+      <canvas id="wheel" width="640" height="640"></canvas>
+      <div style="margin-top:8px" class="small">あなたラウンド: <b id="pR">0</b> / AIラウンド: <b id="aR">0</b></div>
+    </div>
+    <div>
+      <div id="log" class="small"></div>
     </div>
   </div>
-
-  <div class="wrap">
-    <section class="card">
-      <div>
-        <div class="pointer"></div>
-        <canvas id="wheel" width="640" height="640"></canvas>
-        <div class="actions">
-          <button id="spin" class="btn">🎲 スピン</button>
-          <button id="bank" class="btn">💰 バンク</button>
-          <button id="ins"  class="btn">🛡 保険（ラウンド1回）</button>
-        </div>
-      </div>
-      <div>
-        <div class="pill" style="display:inline-block">今ラウンド: <b id="round">0</b></div>
-        <div class="pill" style="display:inline-block">AIラウンド: <b id="roundA">0</b></div>
-        <hr style="border:none;border-top:1px dashed #2a3b77;margin:8px 0">
-        <div id="log" class="small"></div>
-      </div>
-    </section>
-  </div>
-  <div id="toast" class="toast">text</div>
+</div>
+<div id="toast" class="toast">text</div>
 
 <script>
-/* ===== Util ===== */
-const tip=t=>{const el=document.getElementById('toast'); el.textContent=t; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),1000);}
+/* ===== utils ===== */
+const tip=t=>{const el=document.getElementById('toast'); el.textContent=t; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),900);}
 const log=m=>{const L=document.getElementById('log'); L.innerHTML+=m+'<br>'; L.scrollTop=L.scrollHeight;}
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)); const rad=d=>d*Math.PI/180;
 
-/* ===== Wheel data ===== */
-const SEG=[ // 値（スカルはnull）
-  3, 2, 4, 1, null, 3, -2, 5, 1, -3, 4, 2
-];
-const COLORS=["#2dd4bf","#60a5fa","#f472b6","#fde047","#ef4444","#34d399","#93c5fd","#f59e0b","#a3e635","#ef4444","#22c55e","#60a5fa"];
-const SKULL_INDEX=SEG.findIndex(v=>v===null); // 4
-const BASE_DEG=360/SEG.length;
+/* ===== data ===== */
+const SEG=[3,2,4,1,null,3,-2,5,1,-3,4,2]; const COLORS=["#34d399","#60a5fa","#f472b6","#fde047","#ef4444","#22c55e","#93c5fd","#f59e0b","#a3e635","#ef4444","#10b981","#60a5fa"];
+const BASE_DEG=360/SEG.length; const SKULL=SEG.findIndex(v=>v===null);
 
-/* ===== State ===== */
+/* ===== state ===== */
 let S;
 function reset(){
-  S={angle:0, spinning:false, risk:0, you:{score:0, round:0, art:pickArt(), usedIns:false},
-     ai:{score:0, round:0, art:pickArt(), usedIns:false}, turn:'you'};
-  updateHeader(); drawWheel(); document.getElementById('log').innerHTML='';
-  log(`▶️ 開始 あなたのアート: ${S.you.art.name} / AI: ${S.ai.art.name}`);
+  S={angle:0,spinning:false,risk:0,ins:false,turn:'you',you:{score:0,round:0},ai:{score:0,round:0}};
+  update(); draw();
+  document.getElementById('log').innerHTML=''; log('▶️ 開始');
 }
-function pickArt(){
-  const ARTS=[
-    {id:'shield',name:'🛡シールド', effect:'最初のマイナス/スカルを無効'},
-    {id:'aim',   name:'🎯エイム',   effect:'スカル範囲を20%縮小'},
-    {id:'accel', name:'⚡アクセル', effect:'プラス結果に+1'}
-  ];
-  return ARTS[(Math.random()*ARTS.length)|0];
+function update(){
+  pS.textContent=S.you.score; aS.textContent=S.ai.score; risk.textContent=S.risk; pR.textContent=S.you.round; aR.textContent=S.ai.round;
 }
 
-/* ===== Draw wheel ===== */
-function drawWheel(){
-  const cv=document.getElementById('wheel'), c=cv.getContext('2d'); const R=cv.width/2; c.clearRect(0,0,cv.width,cv.height);
+/* ===== draw wheel ===== */
+function draw(){
+  const cv=wheel, c=cv.getContext('2d'), R=cv.width/2; c.clearRect(0,0,cv.width,cv.height);
   c.save(); c.translate(R,R); c.rotate(rad(S.angle));
-  for(let i=0;i<SEG.length;i++){
-    const a0=rad(i*BASE_DEG), a1=rad((i+1)*BASE_DEG);
+  for(let i=0;i<SEG.length;i++){ const a0=rad(i*BASE_DEG), a1=rad((i+1)*BASE_DEG);
     c.beginPath(); c.moveTo(0,0); c.arc(0,0,R,a0,a1); c.closePath(); c.fillStyle=COLORS[i%COLORS.length]; c.fill();
-    // label
-    c.save(); c.rotate(a0+(a1-a0)/2); c.translate(R*0.66,0); c.rotate(-rad(S.angle)); c.fillStyle="#0b0f22"; c.font="bold 32px system-ui";
-    const v=SEG[i]===null?"☠":(SEG[i]>0?`+${SEG[i]}`:`${SEG[i]}`);
-    c.fillText(v,-18,10); c.restore();
+    c.save(); c.rotate(a0+(a1-a0)/2); c.translate(R*0.66,0); c.rotate(-rad(S.angle)); c.fillStyle="#0b1120"; c.font="bold 32px system-ui"; const v=SEG[i]==null?"☠":(SEG[i]>0?`+${SEG[i]}`:`${SEG[i]}`); c.fillText(v,-18,10); c.restore();
   }
   c.restore();
 }
 
-/* ===== Resolve result ===== */
-function resultFromAngle(angle, who){
-  // 0度が上（ポインタ）に来るよう正規化
-  const norm=((360 - (angle%360))+360)%360;
-  const idx=Math.floor(norm/BASE_DEG)%SEG.length;
+/* ===== resolve ===== */
+function result(angle, who){
+  const norm=((360-(angle%360))+360)%360; const idx=Math.floor(norm/BASE_DEG)%SEG.length;
   let v=SEG[idx];
-  // 危険度：スカル拡張（左右に risk*2 度）
+  // 危険度：スカルの許容角度追加
   if(v!==null){
-    const skullCenter=SKULL_INDEX*BASE_DEG+BASE_DEG/2;
-    const dist=Math.min(Math.abs(norm-skullCenter),360-Math.abs(norm-skullCenter));
-    const extra=(S.risk*2) * (who.art.id==='aim'?0.8:1); // エイムなら縮小
-    if(dist<BASE_DEG/2 + extra) v=null;
+    const skullCenter=SKULL*BASE_DEG+BASE_DEG/2; const dist=Math.min(Math.abs(norm-skullCenter),360-Math.abs(norm-skullCenter));
+    const extra=S.risk*2; if(dist<BASE_DEG/2+extra) v=null;
   }
-  // アクセル
-  if(v!==null && v>0 && who.art.id==='accel') v+=1;
-  return {index:idx, value:v};
+  return {idx,value:v};
 }
 
-/* ===== Spin ===== */
-function spinOnce(){
-  if(S.spinning||S.turn!=='you') return;
+/* ===== spin/bank/ai ===== */
+function spin(side){
+  if(S.spinning) return; if(side==='you' && S.turn!=='you') return;
   S.spinning=true;
-  // ランダム回転量：2~4回転＋微調整
-  const delta=720 + Math.random()*720 + Math.random()*360;
-  const start=S.angle, end=start+delta;
-  const T=1200, t0=performance.now();
-  const step=(t)=>{
-    const p=clamp((t-t0)/T,0,1); const ease=1- Math.pow(1-p,3);
-    S.angle=start + (end-start)*ease; drawWheel();
-    if(p<1) requestAnimationFrame(step); else { S.spinning=false; afterSpin('you'); }
-  };
+  const start=S.angle, end=start+720+Math.random()*720+Math.random()*360, T=1200, t0=performance.now();
+  const step=t=>{ const p=clamp((t-t0)/T,0,1), e=1-Math.pow(1-p,3); S.angle=start+(end-start)*e; draw();
+    if(p<1) requestAnimationFrame(step); else { S.spinning=false; afterSpin(side); } };
   requestAnimationFrame(step);
 }
 function afterSpin(side){
-  const who= side==='you'? S.you : S.ai;
-  const res=resultFromAngle(S.angle, who);
-  if(res.value===null){ // Skull
-    if(who.art.id==='shield'){ who.art={...who.art,id:'used',name:'🛡消費',effect:'—'}; log(`🛡 シールドでスカル無効！`); }
-    else if(!who.usedIns && side==='you' && INS_ACTIVE){ who.usedIns=true; log(`🛡 保険でスカル回避！（今だけ）`); }
-    else { who.round=0; S.risk=0; log(`${side==='you'?'あなた':'AI'} ☠ バースト！`); turnSwap(); updateHeader(); return; }
+  const who = side==='you'? S.you : S.ai;
+  const r=result(S.angle,who);
+  if(r.value===null){
+    if(side==='you' && S.ins){ S.ins=false; log('🛡 保険発動：バースト回避'); }
+    else { who.round=0; S.risk=0; log(`${side==='you'?'あなた':'AI'} ☠ バースト！`); S.turn = (side==='you')?'ai':'you'; update(); if(S.turn==='ai') setTimeout(ai,450); return; }
   }else{
-    let add=res.value;
-    if(add<0){
-      if(who.art.id==='shield'){ who.art={...who.art,id:'used',name:'🛡消費',effect:'—'}; add=0; log(`🛡 シールドでマイナス無効！`); }
-      else if(!who.usedIns && side==='you' && INS_ACTIVE){ who.usedIns=true; add=Math.ceil(add/2); log(`🛡 保険で半減：${add}`); }
-    }
-    who.round+=add;
-    S.risk++;
-    log(`${side==='you'?'あなた':'AI'} 結果：${add>=0?'+':''}${add}（累計 ${who.round}） 危険度 ${S.risk}`);
+    let add=r.value; if(add<0 && side==='you' && S.ins){ add=Math.ceil(add/2); S.ins=false; log('🛡 保険でマイナス半減'); }
+    who.round += add; S.risk++;
+    log(`${side==='you'?'あなた':'AI'} 結果 ${add>=0?'+':''}${add} / 累計 ${who.round} / 危険度 ${S.risk}`);
   }
-  updateHeader();
-  if(side==='you'){ // ここで終了/続行はボタンで
-  }else{ aiDecide(); }
+  update();
+  if(side==='ai') setTimeout(ai,500);
 }
-
-/* ===== Bank / Insurance ===== */
-let INS_ACTIVE=false;
 function bank(){
-  if(S.turn!=='you') return;
-  S.you.score+=S.you.round; S.you.round=0; S.risk=0; INS_ACTIVE=false; S.you.usedIns=false;
-  log(`💰 バンク！ あなた総得点 ${S.you.score}`);
-  updateHeader(); turnSwap();
+  if(S.turn!=='you'||S.spinning) return;
+  S.you.score+=S.you.round; S.you.round=0; S.risk=0; S.ins=false; update(); log(`💰 バンク → あなた ${S.you.score}`);
+  S.turn='ai'; ai();
 }
-function useInsurance(){
-  if(S.turn!=='you') return;
-  if(INS_ACTIVE){ tip('既にオン'); return; }
-  INS_ACTIVE=true; tip('保険オン（今ラウンド一度だけ）');
-}
-
-/* ===== AI ===== */
-function aiTurn(){
+function ai(){
   if(S.spinning) return;
-  // 戦略：期待値 > リスク閾値 で回す。簡易ヒューリスティック
-  const lead=S.ai.score - S.you.score;
-  const safe= S.risk<2;
-  const target = lead<5 ? 8 : 5; // 追うときは強気
-  if(S.ai.round>=target || !safe){ // バンク
-    S.ai.score+=S.ai.round; S.ai.round=0; S.risk=0; S.ai.usedIns=false;
-    log(`🤖 💰 バンク。AI総得点 ${S.ai.score}`); updateHeader(); turnSwap(); return;
-  }
-  // たまに保険
-  if(!S.ai.usedIns && Math.random()<0.25){ S.ai.usedIns=true; log('🤖 🛡（AIは保険を温存扱い：マイナス時自動）'); }
-  // スピン
-  S.spinning=true;
-  const delta=720 + Math.random()*720 + Math.random()*360;
-  const start=S.angle, end=start+delta; const T=1100, t0=performance.now();
-  const step=(t)=>{ const p=clamp((t-t0)/T,0,1); const ease=1- Math.pow(1-p,3); S.angle=start+(end-start)*ease; drawWheel();
-    if(p<1) requestAnimationFrame(step); else { S.spinning=false; // resolve
-      const res=resultFromAngle(S.angle,S.ai);
-      if(res.value===null){
-        if(S.ai.art.id==='shield'){ S.ai.art={...S.ai.art,id:'used',name:'🛡消費',effect:'—'}; log('🤖 🛡 シールドでスカル回避'); }
-        else { S.ai.round=0; S.risk=0; log('🤖 ☠ バースト'); turnSwap(); updateHeader(); }
-      }else{
-        let add=res.value;
-        if(add<0 && S.ai.usedIns){ add=Math.ceil(add/2); log('🤖 🛡 保険で半減'); }
-        if(add<0 && S.ai.art.id==='shield'){ add=0; S.ai.art={...S.ai.art,id:'used',name:'🛡消費',effect:'—'}; log('🤖 🛡 マイナス無効'); }
-        if(add>0 && S.ai.art.id==='accel') add+=1;
-        S.ai.round+=add; S.risk++; log(`🤖 結果：${add>=0?'+':''}${add}（累計 ${S.ai.round}） 危険度 ${S.risk}`);
-        updateHeader(); setTimeout(aiTurn, 450);
-      }
-    } };
-  requestAnimationFrame(step);
-}
-function aiDecide(){ setTimeout(aiTurn, 500); }
-
-/* ===== Turn & Header ===== */
-function turnSwap(){ S.turn = (S.turn==='you')?'ai':'you'; if(S.turn==='ai') aiTurn(); }
-function updateHeader(){
-  document.getElementById('scoreP').textContent=S.you.score;
-  document.getElementById('scoreA').textContent=S.ai.score;
-  document.getElementById('risk').textContent=S.risk;
-  document.getElementById('round').textContent=S.you.round;
-  document.getElementById('roundA').textContent=S.ai.round;
-  document.getElementById('art').textContent=S.you.art.name;
+  // 簡易方針：ラウンド>=8 ならバンク／危険度>=3 ならバンク／それ以外スピン
+  if(S.ai.round>=8 || S.risk>=3){ S.ai.score+=S.ai.round; S.ai.round=0; S.risk=0; update(); log(`🤖 💰 バンク → ${S.ai.score}`); S.turn='you'; return; }
+  spin('ai');
 }
 
-/* ===== Controls ===== */
-document.getElementById('spin').onclick=()=>spinOnce();
-document.getElementById('bank').onclick=()=>bank();
-document.getElementById('ins').onclick=()=>useInsurance();
+/* ===== controls ===== */
+spinBtn= document.getElementById('spin'); bankBtn=document.getElementById('bank'); insBtn=document.getElementById('ins');
+spinBtn.onclick=()=>spin('you'); bankBtn.onclick=()=>bank();
+insBtn.onclick=()=>{ if(S.turn!=='you') return; S.ins=true; tip('保険オン（次のマイナス/スカルに適用）'); };
+document.getElementById('unlock').onclick=()=>{ S.spinning=false; tip('🔓解除'); };
 document.getElementById('new').onclick=()=>reset();
 
-/* ===== Zoom ===== */
-const zr=document.getElementById('z'), zm=document.getElementById('z-'), zp=document.getElementById('z+');
-const applyZoom=v=>{ const x=clamp(v,260,420); zr.value=x; document.documentElement.style.setProperty('--size',x+'px'); drawWheel(); };
-zr.oninput=()=>applyZoom(+zr.value); zm.onclick=()=>applyZoom(+zr.value-20); zp.onclick=()=>applyZoom(+zr.value+20);
+/* ===== zoom ===== */
+const zr=document.getElementById('z'); const applyZoom=v=>{const x=clamp(v,280,420); zr.value=x; document.documentElement.style.setProperty('--size',x+'px'); draw();};
+document.getElementById('z-').onclick=()=>applyZoom(+zr.value-20); document.getElementById('z+').onclick=()=>applyZoom(+zr.value+20); zr.oninput=()=>applyZoom(+zr.value);
 
-/* ===== Boot ===== */
-window.addEventListener('load',()=>{ applyZoom(+zr.value); reset(); });
+/* ===== boot ===== */
+window.onload=()=>{applyZoom(+zr.value); reset();}
 </script>
-</body>
-</html>
+</body></html>
